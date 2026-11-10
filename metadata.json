@@ -1,0 +1,6 @@
+{
+  "name": "Cerdas Cermat Santri",
+  "description": "Aplikasi lomba cerdas cermat dengan fitur buzzer, dashboard dinamis, timer, dan spin wheel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
