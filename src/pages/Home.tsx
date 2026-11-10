@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Trophy, Settings, Users, LogOut, Download } from 'lucide-react';
+import { Trophy, Settings, Users, LogOut, Bell } from 'lucide-react';
 import { socket } from '../lib/socket';
 import { GameState } from '../types';
 
@@ -66,33 +66,66 @@ export default function Home() {
             </div>
           </Link>
 
-          <div className="pt-4 border-t border-slate-100">
-            <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 mb-3 text-xs text-amber-800">
-              <span className="font-bold block mb-0.5">ℹ️ Mode Lomba Panggung Offline:</span>
-              Peserta menjawab langsung di panggung dengan bel fisik. Operator/Juri cukup membuka <strong>Dashboard Utama</strong> di Proyektor dan <strong>Admin Panel</strong> di Laptop.
+          <div className="pt-4 border-t border-slate-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell size={18} className="text-amber-500" />
+                <h4 className="text-sm font-bold text-slate-800">
+                  Bel Peserta (Opsional)
+                </h4>
+              </div>
+              <span className="text-[11px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                Fitur Tambahan
+              </span>
             </div>
 
-            <details className="text-xs text-slate-500 cursor-pointer">
-              <summary className="font-semibold text-slate-600 hover:text-slate-900 py-1 flex items-center justify-between">
-                <span>Bel Virtual Tambahan (Opsional)</span>
-                <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">{gameState?.groups.length || 0} Regu</span>
-              </summary>
-              <p className="text-[11px] text-slate-400 mt-1 mb-2">
-                Hanya digunakan jika lomba tidak memiliki bel fisik di panggung.
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                {(gameState?.groups || []).map((group) => (
-                  <Link
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Jika lomba menggunakan bel digital di meja masing-masing kelompok, setiap kelompok dapat membuka link bel di bawah:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {(gameState?.groups || []).map((group, idx) => {
+                const groupUrl = `${window.location.origin}/${roomId}/group/${group.id}`;
+                return (
+                  <div
                     key={group.id}
-                    to={`/${roomId}/group/${group.id}`}
-                    className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 text-slate-600 transition-colors text-center text-xs font-bold"
+                    className="p-3 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-amber-50/50 hover:border-amber-300 transition-all flex items-center justify-between group"
                   >
-                    <Users size={16} className="mb-1" />
-                    <span className="truncate w-full">{group.name}</span>
-                  </Link>
-                ))}
-              </div>
-            </details>
+                    <div className="min-w-0 pr-2">
+                      <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest block">
+                        Regu #{idx + 1}
+                      </span>
+                      <h5 className="font-bold text-slate-900 text-sm truncate">{group.name}</h5>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigator.clipboard.writeText(groupUrl);
+                          alert(`Link Bel ${group.name} berhasil disalin:\n${groupUrl}`);
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 bg-white border border-slate-200 rounded-lg hover:border-slate-300 text-xs font-semibold cursor-pointer"
+                        title="Salin Link Bel"
+                      >
+                        Salin
+                      </button>
+                      <Link
+                        to={`/${roomId}/group/${group.id}`}
+                        target="_blank"
+                        className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1"
+                      >
+                        <Bell size={12} />
+                        <span>Buka</span>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-500 leading-normal">
+              💡 <em>Catatan:</em> Bila lomba memakai bel fisik panggung, lewati menu ini. Operator cukup mengontrol lomba dari <strong>Admin Panel</strong> dan <strong>Dashboard Utama</strong>.
+            </div>
           </div>
         </div>
       </div>

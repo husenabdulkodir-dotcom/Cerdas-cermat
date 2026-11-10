@@ -1,7 +1,13 @@
 import { io } from 'socket.io-client';
 
-// The socket connects to the same host as the applet.
-// We must allow default transports (polling -> websocket upgrade) for serverless/Vercel compatibility.
+// Ultra-low latency configuration:
+// Prioritizes direct WebSocket for sub-5ms local network response time
 export const socket = io({
   path: '/socket.io/',
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 500,
+  timeout: 10000,
 });
+

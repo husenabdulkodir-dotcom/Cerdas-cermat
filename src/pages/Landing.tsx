@@ -82,6 +82,18 @@ export default function Landing() {
           <span>Buat Ruangan Baru (Acak)</span>
         </button>
 
+        <div className="w-full mt-6 pt-4 border-t border-slate-100 flex flex-col items-center">
+          <a
+            href="/cerdas-cermat-app.zip"
+            download="cerdas-cermat-app.zip"
+            className="text-xs text-slate-500 hover:text-emerald-700 flex items-center gap-1.5 font-bold py-1.5 px-3 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <Download size={14} />
+            <span>Unduh Folder Lengkap Aplikasi (.ZIP)</span>
+          </a>
+          <span className="text-[10px] text-slate-400 mt-0.5">Untuk dijalankan secara offline di laptop Anda</span>
+        </div>
+
       </div>
     </div>
   );

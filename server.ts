@@ -679,7 +679,24 @@ async function startServer() {
   }
 
   httpServer.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`\n==================================================`);
+    console.log(`  CERDAS CERMAT SANTRI - SERVER SIAP DIGUNAKAN`);
+    console.log(`==================================================`);
+    console.log(`- Akses Lokal Laptop: http://localhost:${PORT}`);
+    try {
+      const os = require('os');
+      const interfaces = os.networkInterfaces();
+      for (const devName in interfaces) {
+        const iface = interfaces[devName];
+        for (let i = 0; i < iface.length; i++) {
+          const alias = iface[i];
+          if (alias.family === 'IPv4' && !alias.internal) {
+            console.log(`- Akses Jaringan Lokal (WiFi/LAN Offline): http://${alias.address}:${PORT}`);
+          }
+        }
+      }
+    } catch {}
+    console.log(`==================================================\n`);
   });
 }
 
