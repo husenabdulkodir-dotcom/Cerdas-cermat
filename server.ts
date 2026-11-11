@@ -16,6 +16,19 @@ async function startServer() {
     }
   });
 
+  // Dedicated endpoint for downloading source code zip (must be registered before Vite middleware)
+  app.get('/api/download-zip', (req, res) => {
+    const zipPath = path.join(process.cwd(), 'public', 'cerdas-cermat-app.zip');
+    res.download(zipPath, 'cerdas-cermat-app.zip', (err) => {
+      if (err) {
+        console.error('Error downloading zip:', err);
+        if (!res.headersSent) {
+          res.status(500).send('Gagal mengunduh file zip');
+        }
+      }
+    });
+  });
+
   const generateDefaultState = () => ({
     groups: [
       { id: 'g1', name: 'Kelompok 1', score: 0 },

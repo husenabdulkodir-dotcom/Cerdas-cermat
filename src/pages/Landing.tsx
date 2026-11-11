@@ -84,14 +84,14 @@ export default function Landing() {
 
         <div className="w-full mt-6 pt-4 border-t border-slate-100 flex flex-col items-center">
           <a
-            href="/cerdas-cermat-app.zip"
+            href="/api/download-zip"
             download="cerdas-cermat-app.zip"
-            className="text-xs text-slate-500 hover:text-emerald-700 flex items-center gap-1.5 font-bold py-1.5 px-3 rounded-lg hover:bg-slate-50 transition-colors"
+            className="text-xs text-slate-600 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 flex items-center gap-2 font-bold py-2 px-4 rounded-xl transition-all shadow-xs"
           >
-            <Download size={14} />
+            <Download size={15} className="text-emerald-600" />
             <span>Unduh Folder Lengkap Aplikasi (.ZIP)</span>
           </a>
-          <span className="text-[10px] text-slate-400 mt-0.5">Untuk dijalankan secara offline di laptop Anda</span>
+          <span className="text-[10px] text-slate-400 mt-1">Isi lengkap: server.ts, React, bank 20 soal, audio, dsb</span>
         </div>
 
       </div>
