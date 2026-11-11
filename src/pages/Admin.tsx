@@ -63,6 +63,16 @@ export default function Admin() {
   }, [gameState?.spinWheelResult]);
 
   useEffect(() => {
+    if (roomId) {
+      socket.emit('joinRoom', roomId);
+    }
+
+    const onConnect = () => {
+      if (roomId) socket.emit('joinRoom', roomId);
+    };
+
+    socket.on('connect', onConnect);
+
     socket.on('gameState', (state: GameState) => {
       setGameState(state);
     });
@@ -71,7 +81,7 @@ export default function Admin() {
        setGameState(prev => prev ? { ...prev, timer: time } : prev);
     });
 
-    socket.emit('requestGameState');
+    socket.emit('requestGameState', roomId);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Shortcut only applies if we aren't typing in an input
@@ -111,11 +121,12 @@ export default function Admin() {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('gameState');
       socket.off('timerUpdate');
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [roomId]);
 
   if (!gameState) return <div className="p-8 text-slate-500">Menyambungkan ke server...</div>;
 

@@ -272,35 +272,46 @@ async function startServer() {
 
   // Stores gameState per room code
   const rooms = new Map<string, any>();
-  const timerIntervals = new Map<string, any>();
+  const timerIntervals = new Map<string, NodeJS.Timeout>();
+  const normalizeRoomId = (id: string | null | undefined): string => {
+    if (!id || typeof id !== 'string') return 'DEFAULT';
+    const clean = id.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '-');
+    return clean || 'DEFAULT';
+  };
 
   const getGameState = (roomId: string) => {
-    if (!rooms.has(roomId)) {
-      rooms.set(roomId, generateDefaultState());
+    const norm = normalizeRoomId(roomId);
+    if (!rooms.has(norm)) {
+      rooms.set(norm, generateDefaultState());
     }
-    return rooms.get(roomId);
+    return rooms.get(norm);
   };
 
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
     let currentRoom: string | null = null;
 
-    socket.on('joinRoom', (roomId: string) => {
+    socket.on('joinRoom', (rawRoomId: string) => {
+      const roomId = normalizeRoomId(rawRoomId);
       if (currentRoom) {
         socket.leave(currentRoom);
       }
       currentRoom = roomId;
       socket.join(roomId);
-      console.log(`Socket ${socket.id} joined room ${roomId}`);
+      console.log(`Socket ${socket.id} joined room: ${roomId}`);
       
       const gameState = getGameState(roomId);
       socket.emit('gameState', gameState);
     });
     
-    socket.on('requestGameState', () => {
-      if (currentRoom) {
-        socket.emit('gameState', getGameState(currentRoom));
+    socket.on('requestGameState', (rawRoomId?: string) => {
+      const roomToQuery = normalizeRoomId(rawRoomId || currentRoom);
+      if (!currentRoom && roomToQuery) {
+        currentRoom = roomToQuery;
+        socket.join(roomToQuery);
+        console.log(`Socket ${socket.id} auto-joined room on requestGameState: ${roomToQuery}`);
       }
+      socket.emit('gameState', getGameState(roomToQuery));
     });
 
     // Admin Actions
@@ -695,20 +706,33 @@ async function startServer() {
     console.log(`\n==================================================`);
     console.log(`  CERDAS CERMAT SANTRI - SERVER SIAP DIGUNAKAN`);
     console.log(`==================================================`);
-    console.log(`- Akses Lokal Laptop: http://localhost:${PORT}`);
+    console.log(`- Akses Lokal Laptop ini: http://localhost:${PORT}`);
+    
+    let foundLan = false;
     try {
       const os = require('os');
       const interfaces = os.networkInterfaces();
       for (const devName in interfaces) {
         const iface = interfaces[devName];
-        for (let i = 0; i < iface.length; i++) {
-          const alias = iface[i];
-          if (alias.family === 'IPv4' && !alias.internal) {
-            console.log(`- Akses Jaringan Lokal (WiFi/LAN Offline): http://${alias.address}:${PORT}`);
+        if (!iface) continue;
+        for (const alias of iface) {
+          // In Node.js, family can be 'IPv4' or number 4
+          const isIpv4 = alias.family === 'IPv4' || alias.family === 4;
+          if (isIpv4 && !alias.internal) {
+            console.log(`- Akses Perangkat Lain (HP/Laptop Lain): http://${alias.address}:${PORT}`);
+            foundLan = true;
           }
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (!foundLan) {
+      console.log(`- Tip: Sambungkan laptop ini ke Wi-Fi / Hotspot.`);
+      console.log(`- Cek IP di Windows: Buka CMD baru -> ketik 'ipconfig' (lihat IPv4 Address, cth: 192.168.1.X)`);
+      console.log(`- Perangkat lain buka di browser: http://[IPv4-Laptop-Anda]:${PORT}`);
+    }
     console.log(`==================================================\n`);
   });
 }

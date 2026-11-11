@@ -1,16 +1,33 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, LogIn, Key, Sparkles, Download } from 'lucide-react';
+import { Trophy, LogIn, Key, Sparkles, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Landing() {
   const [roomCode, setRoomCode] = useState('');
+  const [isZipping, setIsZipping] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const navigate = useNavigate();
+
+  const handleDownload = () => {
+    setIsZipping(true);
+    const link = document.createElement('a');
+    link.href = '/api/download-zip';
+    link.download = 'cerdas-cermat-app.zip';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setDownloadSuccess(true);
+    setTimeout(() => {
+      setDownloadSuccess(false);
+      setIsZipping(false);
+    }, 3000);
+  };
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     if (roomCode.trim()) {
-      const code = roomCode.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      const code = roomCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '-');
       navigate(`/${code}`);
     }
   };
@@ -83,15 +100,38 @@ export default function Landing() {
         </button>
 
         <div className="w-full mt-6 pt-4 border-t border-slate-100 flex flex-col items-center">
-          <a
-            href="/api/download-zip"
-            download="cerdas-cermat-app.zip"
-            className="text-xs text-slate-600 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 flex items-center gap-2 font-bold py-2 px-4 rounded-xl transition-all shadow-xs"
+          <button
+            onClick={handleDownload}
+            disabled={isZipping}
+            className={cn(
+              "w-full text-xs font-bold py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer border",
+              downloadSuccess
+                ? "bg-emerald-600 text-white border-emerald-700"
+                : isZipping
+                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 active:scale-98"
+            )}
           >
-            <Download size={15} className="text-emerald-600" />
-            <span>Unduh Folder Lengkap Aplikasi (.ZIP)</span>
-          </a>
-          <span className="text-[10px] text-slate-400 mt-1">Isi lengkap: server.ts, React, bank 20 soal, audio, dsb</span>
+            {isZipping ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Mengunduh File ZIP...</span>
+              </>
+            ) : downloadSuccess ? (
+              <>
+                <CheckCircle2 size={16} className="text-white" />
+                <span>Berhasil Diunduh! Silakan Cek Downloads</span>
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                <span>Unduh Folder Lengkap Aplikasi (.ZIP)</span>
+              </>
+            )}
+          </button>
+          <span className="text-[10px] text-slate-400 mt-1.5 text-center">
+            File ZIP lengkap (server.ts, React, bank 20 soal, audio & instalan pendukung)
+          </span>
         </div>
 
       </div>

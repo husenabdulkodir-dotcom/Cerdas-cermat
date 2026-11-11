@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { socket } from '../lib/socket';
@@ -22,36 +22,49 @@ export default function GroupView() {
   const navigate = useNavigate();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const soundEnabledRef = useRef(soundEnabled);
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
   const [recentReaction, setRecentReaction] = useState<string | null>(null);
 
   useEffect(() => {
-    socket.emit('joinRoom', roomId);
+    if (roomId) {
+      socket.emit('joinRoom', roomId);
+    }
+
+    const onConnect = () => {
+      if (roomId) socket.emit('joinRoom', roomId);
+    };
+
+    socket.on('connect', onConnect);
 
     socket.on('gameState', (state: GameState) => {
       setGameState(state);
     });
 
     socket.on('buzzed', (buzzedId: string) => {
-      if (soundEnabled) playBuzzerSound();
+      if (soundEnabledRef.current) playBuzzerSound();
       if (buzzedId === groupId && navigator.vibrate) {
         navigator.vibrate([120, 60, 120]);
       }
     });
 
     socket.on('sound', (soundName: string) => {
-      if (!soundEnabled) return;
+      if (!soundEnabledRef.current) return;
       if (soundName === 'correct') playCorrectSound();
       else if (soundName === 'wrong') playWrongSound();
     });
 
-    socket.emit('requestGameState');
+    socket.emit('requestGameState', roomId);
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('gameState');
       socket.off('buzzed');
       socket.off('sound');
     };
-  }, [roomId, groupId, soundEnabled]);
+  }, [roomId, groupId]);
 
   const handleBuzz = () => {
     socket.emit('participant:buzz', groupId);

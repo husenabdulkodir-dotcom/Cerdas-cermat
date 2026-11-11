@@ -9,16 +9,27 @@ export default function Home() {
   const [gameState, setGameState] = useState<GameState | null>(null);
 
   useEffect(() => {
+    if (roomId) {
+      socket.emit('joinRoom', roomId);
+    }
+
+    const onConnect = () => {
+      if (roomId) socket.emit('joinRoom', roomId);
+    };
+
+    socket.on('connect', onConnect);
+
     socket.on('gameState', (state: GameState) => {
       setGameState(state);
     });
 
-    socket.emit('requestGameState');
+    socket.emit('requestGameState', roomId);
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('gameState');
     };
-  }, []);
+  }, [roomId]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">

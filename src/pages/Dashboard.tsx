@@ -66,6 +66,11 @@ export default function Dashboard() {
   const { roomId } = useParams<{ roomId: string }>();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const audioEnabledRef = useRef(audioEnabled);
+  useEffect(() => {
+    audioEnabledRef.current = audioEnabled;
+  }, [audioEnabled]);
+
   const [showConfetti, setShowConfetti] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; groupName: string }[]>([]);
@@ -75,12 +80,22 @@ export default function Dashboard() {
   const prevScoresRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
+    if (roomId) {
+      socket.emit('joinRoom', roomId);
+    }
+
+    const onConnect = () => {
+      if (roomId) socket.emit('joinRoom', roomId);
+    };
+
+    socket.on('connect', onConnect);
+
     socket.on('gameState', (state: GameState) => {
       setGameState(state);
 
       // Trigger reveal fanfare
       if (state.revealAnswer && !prevRevealRef.current) {
-        if (audioEnabled) playRevealSound();
+        if (audioEnabledRef.current) playRevealSound();
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 2500);
       }
@@ -112,15 +127,15 @@ export default function Dashboard() {
 
       // Play tick sound when countdown is critical (1 to 5 seconds)
       if (time > 0 && time <= 5 && time !== prevTimerRef.current) {
-        if (audioEnabled) playTickSound();
+        if (audioEnabledRef.current) playTickSound();
       } else if (time === 0 && prevTimerRef.current > 0) {
-        if (audioEnabled) playTimesUpSound();
+        if (audioEnabledRef.current) playTimesUpSound();
       }
       prevTimerRef.current = time;
     });
 
     socket.on('buzzed', () => {
-      if (audioEnabled) playBuzzerSound();
+      if (audioEnabledRef.current) playBuzzerSound();
     });
 
     socket.on('participantReaction', (data: { groupId: string; groupName: string; emoji: string }) => {
@@ -132,7 +147,7 @@ export default function Dashboard() {
     });
 
     socket.on('sound', (soundName: string) => {
-      if (!audioEnabled) return;
+      if (!audioEnabledRef.current) return;
       if (soundName === 'correct') {
         playCorrectSound();
         setShowConfetti(true);
@@ -162,16 +177,17 @@ export default function Dashboard() {
       }
     });
 
-    socket.emit('requestGameState');
+    socket.emit('requestGameState', roomId);
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('gameState');
       socket.off('timerUpdate');
       socket.off('buzzed');
       socket.off('sound');
       socket.off('participantReaction');
     };
-  }, [audioEnabled]);
+  }, [roomId]);
 
   // Unlock audio context on first interaction
   const enableAudio = () => {
